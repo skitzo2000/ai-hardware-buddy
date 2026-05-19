@@ -96,7 +96,7 @@ func (s *Server) Serve(ctx context.Context) error {
 	srv.AddTool(mcp.NewTool("connect",
 		mcp.WithDescription("Attach the buddy to a paired Claude-XXXX device."),
 		mcp.WithString("address",
-			mcp.Description("BLE MAC (e.g. EC:E3:34:66:B5:22). Omit to scan."),
+			mcp.Description("BLE peer identifier — MAC (e.g. EC:E3:34:66:B5:22) on linux/windows, CoreBluetooth peripheral UUID on macOS. Omit to scan by name."),
 		),
 	), s.handleConnect)
 

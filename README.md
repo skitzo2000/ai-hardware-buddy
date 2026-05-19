@@ -97,14 +97,24 @@ Restart `claude` so the plugin's hooks load and the MCP server starts.
 
 ### 3. (Optional) `$HWBUDDY_ADDRESS` for auto-attach
 
-If you have a single buddy on a stable MAC, set this in your shell rc:
+If you have a single buddy on a stable identifier, set this in your shell
+rc:
 
 ```bash
+# linux / windows — colon-separated MAC
 export HWBUDDY_ADDRESS=EC:E3:XX:XX:XX:XX
+
+# macOS — CoreBluetooth never exposes the peer MAC; use the system-assigned
+# peripheral UUID instead (read it out of `/hwb-ping` after a successful
+# discover-by-name connect, or skip this step entirely and let the scan flow
+# pick the device up by its `Claude-XXXX` name on every start).
+export HWBUDDY_ADDRESS=00112233-4455-6677-8899-AABBCCDDEEFF
 ```
 
 The MCP server will auto-connect when it starts and you skip the
-`/hwb-connect` step.
+`/hwb-connect` step. If unset, the scan flow (`/hwb-connect` with no
+argument) finds any `Claude-*` peripheral and works identically on every
+platform.
 
 ### 4. Verify
 
@@ -167,6 +177,32 @@ go build -o bin/hwbuddy-$(uname -s | tr A-Z a-z)-$(uname -m | sed 's/x86_64/amd6
 GitHub Actions cross-builds for `linux-amd64`, `linux-arm64`,
 `darwin-amd64`, `darwin-arm64`, and `windows-amd64` on each tag and
 attaches the artifacts to the GitHub release.
+
+## Platform support
+
+| Platform | Build | Runtime tested |
+|---|---|---|
+| linux-amd64 | green | yes (primary dev target) |
+| linux-arm64 | green | spot-tested |
+| windows-amd64 | green | not tested |
+| darwin-amd64 (Intel) | green | **not tested** — no Mac available to the maintainer |
+| darwin-arm64 (Apple silicon) | green | **not tested** — no Mac available to the maintainer |
+
+The macOS path is in particular a best-effort port:
+
+- Apple's CoreBluetooth stack identifies peers by a system-assigned
+  peripheral UUID, not by the BLE MAC. `$HWBUDDY_ADDRESS` accordingly
+  takes a UUID on macOS, not a MAC.
+- The `bluetoothctl`-based BlueZ recovery used when Linux holds a stale
+  connection to a trusted device is a no-op on macOS — there's no
+  equivalent CLI in Apple's stack.
+- Pairing must already exist via System Settings → Bluetooth before
+  `hwbuddy connect` will work, same as the Linux flow.
+
+If you're running on a Mac and something breaks, please open an issue —
+the project is public and PRs are welcome. The tracking issue for the
+known macOS gaps is
+[#2](https://github.com/skitzo2000/ai-hardware-buddy/issues/2).
 
 ## Hardware
 
