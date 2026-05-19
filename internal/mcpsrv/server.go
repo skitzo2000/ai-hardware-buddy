@@ -38,6 +38,12 @@ const keepaliveInterval = 12 * time.Second
 // nudges us awake earlier on a clean drop.
 const reconnectInterval = 8 * time.Second
 
+// dormantAfterDefault is how long the reconnect loop will keep retrying
+// before clearing desiredAddress and going idle. Overridable via the
+// HWBUDDY_DORMANT_AFTER env var (parsed as a Go duration). A subsequent
+// `connect` MCP/CLI call re-arms the loop.
+const dormantAfterDefault = 5 * time.Minute
+
 // Server wires the BLE client into MCP tools.
 type Server struct {
 	ble *ble.Buddy
@@ -408,10 +414,23 @@ func (s *Server) onDeviceMessage(obj map[string]any) {
 
 // runReconnect retries Buddy.Connect whenever a desired address is set and
 // the link is down. Woken on Buddy.OnDisconnect for fast recovery, plus a
-// periodic 8-second tick as a fallback for drops we somehow miss.
+// periodic 8-second tick as a fallback for drops we somehow miss. After
+// dormantAfter of continuous failure the loop clears desiredAddress so it
+// stops scanning; an explicit `connect` call re-arms it.
 func (s *Server) runReconnect(ctx context.Context) {
 	t := time.NewTicker(reconnectInterval)
 	defer t.Stop()
+
+	dormantAfter := dormantAfterDefault
+	if v := os.Getenv("HWBUDDY_DORMANT_AFTER"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil && d > 0 {
+			dormantAfter = d
+		} else {
+			log.Printf("ble: invalid HWBUDDY_DORMANT_AFTER=%q, using default %s", v, dormantAfter)
+		}
+	}
+
+	var firstFailAt time.Time
 	for {
 		select {
 		case <-ctx.Done():
@@ -421,7 +440,22 @@ func (s *Server) runReconnect(ctx context.Context) {
 		}
 
 		addr := s.getDesiredAddress()
-		if addr == "" || s.ble.IsConnected() {
+		if addr == "" {
+			firstFailAt = time.Time{}
+			continue
+		}
+		if s.ble.IsConnected() {
+			firstFailAt = time.Time{}
+			continue
+		}
+
+		if firstFailAt.IsZero() {
+			firstFailAt = time.Now()
+		}
+		if time.Since(firstFailAt) > dormantAfter {
+			log.Printf("ble: dormant after %s of disconnect; clearing desired address (issue `connect` to re-arm)", dormantAfter)
+			s.setDesiredAddress("")
+			firstFailAt = time.Time{}
 			continue
 		}
 
@@ -430,6 +464,7 @@ func (s *Server) runReconnect(ctx context.Context) {
 			log.Printf("ble: reconnect failed: %v", err)
 			continue
 		}
+		firstFailAt = time.Time{}
 		s.postConnectAnnounce(ctx)
 	}
 }
