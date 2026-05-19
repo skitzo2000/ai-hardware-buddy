@@ -162,11 +162,10 @@ func (b *Buddy) Connect(ctx context.Context, address string) error {
 }
 
 func (b *Buddy) attemptConnect(_ context.Context, address string) error {
-	mac, err := bluetooth.ParseMAC(address)
+	addr, err := parseAddress(address)
 	if err != nil {
-		return fmt.Errorf("parse mac %q: %w", address, err)
+		return err
 	}
-	addr := bluetooth.Address{MACAddress: bluetooth.MACAddress{MAC: mac}}
 
 	dev, err := b.adapter.Connect(addr, bluetooth.ConnectionParams{})
 	if err != nil {
