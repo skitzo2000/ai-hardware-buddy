@@ -151,8 +151,11 @@ firmware that advertises as `Claude-XXXX` over Bluetooth LE will work:
   no build toolchain needed. Source / build instructions at
   [skitzo2000/claude-desktop-buddy](https://github.com/skitzo2000/claude-desktop-buddy)
   (default branch is `cyd`).
-- **M5StickC Plus** — the upstream target. Original Anthropic firmware
-  at [anthropics/claude-desktop-buddy](https://github.com/anthropics/claude-desktop-buddy).
+- **M5StickC Plus** — the upstream target. If you already have one
+  paired with Claude Desktop's built-in Hardware Buddy GUI, this plugin
+  extends the same pet to Claude Code on Linux / macOS / Windows — no
+  new firmware, no second board. Original Anthropic firmware at
+  [anthropics/claude-desktop-buddy](https://github.com/anthropics/claude-desktop-buddy).
 
 ## License
 
