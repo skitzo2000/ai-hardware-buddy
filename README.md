@@ -9,7 +9,7 @@ CLI / IDE-extension / web), replacing the Claude Desktop app's built-in
 Hardware Buddy GUI.
 
 Works on **Linux, macOS, and Windows** — the plugin ships a single Go
-binary, no separate runtime install. Apache 2.0.
+binary, no separate runtime install. MIT licensed.
 
 ## What it does
 
@@ -159,4 +159,4 @@ firmware that advertises as `Claude-XXXX` over Bluetooth LE will work:
 
 ## License
 
-Apache 2.0. See [LICENSE](./LICENSE).
+MIT. See [LICENSE](./LICENSE).
