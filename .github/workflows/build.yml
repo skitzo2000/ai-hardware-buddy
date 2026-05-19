@@ -1,0 +1,107 @@
+name: Cross-build
+
+on:
+  push:
+    tags: ['v*']
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build ${{ matrix.os_arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-latest,  os_arch: linux-amd64,   GOOS: linux,   GOARCH: amd64,
+              CC: gcc, deps: 'sudo apt-get update && sudo apt-get install -y libbluetooth-dev' }
+          - { runner: ubuntu-24.04-arm, os_arch: linux-arm64, GOOS: linux,   GOARCH: arm64,
+              CC: gcc, deps: 'sudo apt-get update && sudo apt-get install -y libbluetooth-dev' }
+          - { runner: macos-13,       os_arch: darwin-amd64,  GOOS: darwin,  GOARCH: amd64, CC: clang, deps: 'true' }
+          - { runner: macos-14,       os_arch: darwin-arm64,  GOOS: darwin,  GOARCH: arm64, CC: clang, deps: 'true' }
+          - { runner: windows-latest, os_arch: windows-amd64, GOOS: windows, GOARCH: amd64, CC: '', deps: 'true' }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Install system deps
+        shell: bash
+        run: ${{ matrix.deps }}
+
+      - name: Build
+        shell: bash
+        env:
+          GOOS:   ${{ matrix.GOOS }}
+          GOARCH: ${{ matrix.GOARCH }}
+          CC:     ${{ matrix.CC }}
+          CGO_ENABLED: '1'
+        run: |
+          out=plugins/hardware-buddy/bin/hwbuddy-${{ matrix.GOOS }}-${{ matrix.GOARCH }}
+          if [ "${{ matrix.GOOS }}" = "windows" ]; then out="$out.exe"; fi
+          go build -trimpath -ldflags="-s -w" -o "$out" ./cmd/hwbuddy
+          ls -lh "$out"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hwbuddy-${{ matrix.os_arch }}
+          path: plugins/hardware-buddy/bin/hwbuddy-*
+          if-no-files-found: error
+
+  bundle:
+    name: bundle binaries into bin/ on tag
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artefacts
+
+      - name: Commit binaries
+        run: |
+          mkdir -p plugins/hardware-buddy/bin
+          find artefacts -type f -name 'hwbuddy-*' -exec cp -v {} plugins/hardware-buddy/bin/ \;
+          chmod +x plugins/hardware-buddy/bin/hwbuddy-linux-* plugins/hardware-buddy/bin/hwbuddy-darwin-* 2>/dev/null || true
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add plugins/hardware-buddy/bin/
+          if git diff --cached --quiet; then
+            echo "No binary changes to commit."
+            exit 0
+          fi
+          git commit -m "ci: refresh plugins/hardware-buddy/bin/ for ${GITHUB_REF#refs/tags/}"
+          git push origin HEAD:main
+
+  release:
+    name: GitHub release with binaries
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artefacts
+
+      - name: Flatten
+        run: |
+          mkdir -p release
+          find artefacts -type f -name 'hwbuddy-*' -exec cp -v {} release/ \;
+          ls -lh release/
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true

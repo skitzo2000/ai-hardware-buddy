@@ -1,0 +1,22 @@
+{
+  "name": "ai-hardware-buddy",
+  "owner": {
+    "name": "skitzo2000",
+    "url": "https://github.com/skitzo2000"
+  },
+  "metadata": {
+    "description": "Marketplace for the hardware-buddy plugin — Claude Code BLE bridge.",
+    "version": "0.2.0"
+  },
+  "plugins": [
+    {
+      "name": "hardware-buddy",
+      "source": "./plugins/hardware-buddy",
+      "description": "Mirror Claude Code session activity (approvals, session counters, transcripts, token usage) to a Claude-XXXX BLE pet device (CYD / M5StickC). Self-contained: ships a Go MCP server binary, no separate runtime install.",
+      "keywords": ["bluetooth", "ble", "esp32", "cyd", "mcp", "hardware-buddy", "approval"],
+      "category": "integration",
+      "license": "Apache-2.0",
+      "homepage": "https://github.com/skitzo2000/ai-hardware-buddy"
+    }
+  ]
+}

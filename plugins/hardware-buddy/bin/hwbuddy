@@ -1,0 +1,45 @@
+#!/bin/sh
+# Cross-platform launcher for the hwbuddy MCP server / CLI client.
+#
+# Claude Code adds this `bin/` directory to the Bash tool's PATH when the
+# plugin is enabled, so the bare command `hwbuddy` resolves here. We
+# then exec the right pre-built binary for the host OS + arch.
+#
+# Binaries live alongside this script as hwbuddy-<os>-<arch>:
+#     hwbuddy-linux-amd64
+#     hwbuddy-linux-arm64
+#     hwbuddy-darwin-amd64
+#     hwbuddy-darwin-arm64
+#     hwbuddy-windows-amd64.exe   (selected by the .cmd shim instead)
+#
+# GitHub Actions cross-builds and commits all four POSIX binaries on
+# each tag; users get them automatically when /plugin install pulls
+# the repo. If you're hacking locally, `go build -o bin/hwbuddy-<...>`
+# the right one for your platform.
+
+set -e
+
+dir="$(cd "$(dirname "$0")" && pwd)"
+
+os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+case "$os" in
+    linux*)   os=linux ;;
+    darwin*)  os=darwin ;;
+    *) ;;
+esac
+
+arch="$(uname -m)"
+case "$arch" in
+    x86_64|amd64)        arch=amd64 ;;
+    aarch64|arm64)       arch=arm64 ;;
+    *) ;;
+esac
+
+bin="$dir/hwbuddy-${os}-${arch}"
+if [ ! -x "$bin" ]; then
+    echo "hwbuddy: no prebuilt binary for ${os}-${arch} at $bin" >&2
+    echo "hwbuddy: rebuild with \`go build -o $bin ./cmd/hwbuddy\` from the plugin source" >&2
+    exit 127
+fi
+
+exec "$bin" "$@"

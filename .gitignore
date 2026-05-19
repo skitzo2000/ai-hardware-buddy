@@ -1,0 +1,16 @@
+# Go
+*.exe
+*.test
+*.out
+vendor/
+
+# Build artefacts (CI commits the cross-built binaries into bin/, but local
+# builds shouldn't pollute the tree).
+/hwbuddy
+/hwbuddy.exe
+
+# Sockets / state
+*.sock
+
+# Misc
+.DS_Store

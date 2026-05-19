@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "hardware-buddy": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/hwbuddy",
+      "args": []
+    }
+  }
+}
