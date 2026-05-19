@@ -145,11 +145,14 @@ attaches the artifacts to the GitHub release.
 Any board running the [`claude-desktop-buddy`](https://github.com/anthropics/claude-desktop-buddy)
 firmware that advertises as `Claude-XXXX` over Bluetooth LE will work:
 
-- **CYD ESP32-2432S028R** — the cheap-yellow-display board. ~$15 on
-  AliExpress. Firmware port at
+- **CYD ESP32-2432S028R** — the cheap-yellow-display board, ~$15 on
+  AliExpress. Easiest path: plug it in and use the
+  **[web flasher](https://skitzo2000.github.io/claude-desktop-buddy/)** —
+  no build toolchain needed. Source / build instructions at
   [skitzo2000/claude-desktop-buddy](https://github.com/skitzo2000/claude-desktop-buddy)
-  on the `cyd` branch.
-- **M5StickC Plus** — the upstream target. Original Anthropic firmware.
+  (default branch is `cyd`).
+- **M5StickC Plus** — the upstream target. Original Anthropic firmware
+  at [anthropics/claude-desktop-buddy](https://github.com/anthropics/claude-desktop-buddy).
 
 ## License
 
