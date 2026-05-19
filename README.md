@@ -11,6 +11,34 @@ Hardware Buddy GUI.
 Works on **Linux, macOS, and Windows** — the plugin ships a single Go
 binary, no separate runtime install. MIT licensed.
 
+## Companion project: claude-desktop-buddy
+
+Two repos, one pet.
+
+This repo is the **Claude Code plugin** — the bits that let the buddy
+approve tool calls, mirror sessions, and track tokens for your CLI
+sessions. Its sibling is the **firmware** that runs on the device
+itself:
+
+- **M5StickC Plus** — Anthropic's original buddy device. Firmware at
+  [anthropics/claude-desktop-buddy](https://github.com/anthropics/claude-desktop-buddy).
+- **CYD ESP32-2432S028R** — ~$15 cheap-yellow-display board with a
+  touchscreen. The port lives at
+  [skitzo2000/claude-desktop-buddy](https://github.com/skitzo2000/claude-desktop-buddy)
+  and ships a one-click
+  [**web flasher**](https://skitzo2000.github.io/claude-desktop-buddy/) —
+  no toolchain required.
+
+|                | M5StickC Plus                          | CYD ESP32                                |
+|----------------|----------------------------------------|------------------------------------------|
+| Claude Desktop | Anthropic's built-in Hardware Buddy    | Web flasher → Claude Desktop GUI         |
+| Claude Code    | This plugin                            | Web flasher → this plugin                |
+
+**Each side runs standalone.** The CYD firmware works with Claude
+Desktop's GUI without this plugin, and this plugin works with any
+board running buddy firmware — you don't need the CYD if you already
+have an M5.
+
 ## What it does
 
 - Surfaces Claude Code permission prompts on the device — tap-to-approve
